@@ -6,7 +6,7 @@ F = G * m1 * m2 / (r * r)
 ```
 
 ```math
-F = m * a`
+F = m * a
 ```
 
 ![nbody animation](https://github.com/prg-titech/student_nbody_c1/raw/master/nbody.gif "nbody animation")
