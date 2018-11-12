@@ -19,7 +19,8 @@ static const int kBenchmarkIterations = 10000;
 static const float kGravityConstant = 6.673e-11;   // gravitational constant
 
 // Array containing all Body objects on device.
-__device__ Body bodies[kNumBodies];
+Body* host_bodies;
+__device__ Body* dev_bodies;
 
 
 __device__ Body::Body(float pos_x, float pos_y,
@@ -41,20 +42,22 @@ __device__ void Body::update(float dt) {
 }
 
 
-__global__ void kernel_initialize_bodies() {
+__global__ void kernel_initialize_bodies(Body* bodies) {
   for (int i = threadIdx.x + blockDim.x * blockIdx.x;
        i < kNumBodies; i += blockDim.x * gridDim.x) {
+    dev_bodies = bodies;
+
     // Initialize random state.
     curandState rand_state;
     curand_init(kSeed, i, 0, &rand_state);
 
     // Create new Body object with placement-new.
-    new(bodies + i) Body(/*pos_x=*/ 2 * curand_uniform(&rand_state) - 1,
-                         /*pos_y=*/ 2 * curand_uniform(&rand_state) - 1,
-                         /*vel_x=*/ (curand_uniform(&rand_state) - 0.5) / 1000,
-                         /*vel_y=*/ (curand_uniform(&rand_state) - 0.5) / 1000,
-                         /*mass=*/ (curand_uniform(&rand_state)/2 + 0.5)
-                                       * kMaxMass);
+    new(dev_bodies + i) Body(/*pos_x=*/ 2 * curand_uniform(&rand_state) - 1,
+                             /*pos_y=*/ 2 * curand_uniform(&rand_state) - 1,
+                             /*vel_x=*/ (curand_uniform(&rand_state) - 0.5) / 1000,
+                             /*vel_y=*/ (curand_uniform(&rand_state) - 0.5) / 1000,
+                             /*mass=*/ (curand_uniform(&rand_state)/2 + 0.5)
+                                           * kMaxMass);
   }
 }
 
@@ -62,7 +65,7 @@ __global__ void kernel_initialize_bodies() {
 __global__ void kernel_compute_force() {
   for (int i = threadIdx.x + blockDim.x * blockIdx.x;
        i < kNumBodies; i += blockDim.x * gridDim.x) {
-    bodies[i].compute_force();
+    dev_bodies[i].compute_force();
   }
 }
 
@@ -86,18 +89,12 @@ void step_simulation() {
 }
 
 
+
 void run_interactive() {
   init_renderer();
 
-  // Container for bodies on host.
-  Body host_bodies[kNumBodies];
-
   // Run simulation until user closes the window.
   do {
-    // Copy bodies from GPU.
-    cudaMemcpyFromSymbol(host_bodies, bodies, sizeof(Body)*kNumBodies,
-                         0, cudaMemcpyDeviceToHost);
-
     // Compute one step.
     step_simulation();
   } while (draw(host_bodies));
@@ -129,8 +126,9 @@ int main(int argc, char** argv) {
 
   int mode = atoi(argv[1]);
 
-  // Create Body objects.
-  kernel_initialize_bodies<<<128, 128>>>();
+  // Allocate and create Body objects.
+  cudaMallocManaged(&host_bodies, sizeof(Body)*kNumBodies);
+  kernel_initialize_bodies<<<128, 128>>>(host_bodies);
   gpuErrchk(cudaDeviceSynchronize());
 
   if (mode == 0) {
@@ -142,5 +140,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  cudaFree(host_bodies);
   return 0;
 }
+
