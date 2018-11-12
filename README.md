@@ -5,6 +5,10 @@ This repository contains a skeleton of an n-body simulation written in CUDA. An 
 F = G * m1 * m2 / (r * r)
 ```
 
+```math
+F = m * a`
+```
+
 ![nbody animation](https://github.com/prg-titech/student_nbody_c1/raw/master/nbody.gif "nbody animation")
 
 In CUDA, an n-body simulation consists of 2 kernels. The first kernel accumulates the total force that is exerted on bodies. The second kernel computes the change in velocity and position of bodies based on the force. We divide the program into two kernels to make sure that always the "old" position is used for calculating forces, such that the result is deterministic and always the same.
