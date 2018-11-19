@@ -1,10 +1,6 @@
 #ifndef NBODY_H
 #define NBODY_H
 
-// Simulation parameters.
-static const int kNumBodies = 25;
-static const float kMaxMass = 1000;
-
 class Body {
  public:
   // Default constructor required.
@@ -17,6 +13,8 @@ class Body {
   __device__ void compute_force();
 
   __device__ void update(float dt);
+
+  int checksum();
 
   void draw();
 

@@ -6,17 +6,10 @@
 
 #include <curand_kernel.h>
 
+#include "configuration.h"
 #include "cuda_helper.h"
 #include "nbody.h"
 #include "rendering.h"
-
-// Simulation parameters.
-static const int kSeed = 42;
-static const float kTimeInterval = 0.5;
-static const int kBenchmarkIterations = 10000;
-
-// Physical constants.
-static const float kGravityConstant = 6.673e-11;   // gravitational constant
 
 // Array containing all Body objects on device.
 Body* host_bodies;
@@ -39,6 +32,11 @@ __device__ void Body::update(float dt) {
 
   // Bodies should bounce off the wall when they go out of range.
   // Range: [-1, -1] to [1, 1]
+}
+
+
+int Body::checksum() {
+  return pos_x_*1000 + pos_y_*2000 + vel_x_*3000 + vel_y_*4000;
 }
 
 
@@ -117,6 +115,17 @@ void run_benchmark() {
   printf("Time: %lu ms\n", millis);
 }
 
+int checksum() {
+  int result = 0;
+
+  for (int i = 0; i < kNumBodies; ++i) {
+    result += i * host_bodies[i].checksum();
+    result %= 16785407;
+  }
+
+  return result;
+}
+
 int main(int argc, char** argv) {
   if (argc != 2) {
     printf("Usage: %s mode\n\nmode 0: Interactive mode\nmode 1: Benchmark\n",
@@ -135,6 +144,7 @@ int main(int argc, char** argv) {
     run_interactive();
   } else if (mode == 1) {
     run_benchmark();
+    printf("Checksum: %i\n", checksum());
   } else {
     printf("Invalid mode.\n");
     return 1;
