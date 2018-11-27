@@ -1,0 +1,3 @@
+[submodule "lib/soa-alloc"]
+	path = lib/soa-alloc
+	url = https://github.com/prg-titech/soa-alloc.git

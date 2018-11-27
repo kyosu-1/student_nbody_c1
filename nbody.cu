@@ -36,7 +36,7 @@ __device__ void Body::update(float dt) {
 
 
 int Body::checksum() {
-  return pos_x_*1000 + pos_y_*2000 + vel_x_*3000 + vel_y_*4000;
+  return static_cast<int>(pos_x_*1000 + pos_y_*2000 + vel_x_*3000 + vel_y_*4000) % 123456;
 }
 
 
@@ -119,8 +119,7 @@ int checksum() {
   int result = 0;
 
   for (int i = 0; i < kNumBodies; ++i) {
-    result += i * host_bodies[i].checksum();
-    result %= 16785407;
+    result += host_bodies[i].checksum();
   }
 
   return result;

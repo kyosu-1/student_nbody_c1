@@ -37,8 +37,8 @@ __device__ void new_Body(int id, float pos_x, float pos_y,
 
 
 int Body_checksum(int id) {
-  return host_Body_pos_x[id]*1000 + host_Body_pos_y[id]*2000
-      + host_Body_vel_x[id]*3000 + host_Body_vel_y[id]*4000;
+  return static_cast<int>(host_Body_pos_x[id]*1000 + host_Body_pos_y[id]*2000
+      + host_Body_vel_x[id]*3000 + host_Body_vel_y[id]*4000) % 123456;
 }
 
 
@@ -110,8 +110,7 @@ int checksum() {
   int result = 0;
 
   for (int i = 0; i < kNumBodies; ++i) {
-    result += i * Body_checksum(i);
-    result %= 16785407;
+    result += Body_checksum(i);
   }
 
   return result;

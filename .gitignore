@@ -32,3 +32,4 @@
 *.app
 nbody
 nbody_soa
+nbody_soaalloc
