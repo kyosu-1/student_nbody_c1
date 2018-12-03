@@ -45,6 +45,7 @@ __device__ float Body_pos_y[kNumBodies];
 __device__ float Body_vel_x[kNumBodies];
 __device__ float Body_vel_y[kNumBodies];
 __device__ float Body_mass[kNumBodies];
+int host_draw_counter;
 float host_Body_pos_x[kNumBodies];
 float host_Body_pos_y[kNumBodies];
 float host_Body_vel_x[kNumBodies];
@@ -110,12 +111,14 @@ void transfer_data() {
   cudaMemcpyFromSymbol(host_Body_pos_x, Body_pos_x,
                        sizeof(float)*kNumBodies, 0, cudaMemcpyDeviceToHost);
   cudaMemcpyFromSymbol(host_Body_pos_y, Body_pos_y,
-  	                   sizeof(float)*kNumBodies, 0, cudaMemcpyDeviceToHost);
+                       sizeof(float)*kNumBodies, 0, cudaMemcpyDeviceToHost);
   cudaMemcpyFromSymbol(host_Body_vel_x, Body_vel_x,
-  	                   sizeof(float)*kNumBodies, 0, cudaMemcpyDeviceToHost);
+                       sizeof(float)*kNumBodies, 0, cudaMemcpyDeviceToHost);
   cudaMemcpyFromSymbol(host_Body_vel_y, Body_vel_y,
-  	                   sizeof(float)*kNumBodies, 0, cudaMemcpyDeviceToHost);
+                       sizeof(float)*kNumBodies, 0, cudaMemcpyDeviceToHost);
   cudaMemcpyFromSymbol(host_Body_mass, Body_mass, sizeof(float)*kNumBodies, 0,
+                       cudaMemcpyDeviceToHost);
+  cudaMemcpyFromSymbol(&host_draw_counter, draw_counter, sizeof(int), 0,
                        cudaMemcpyDeviceToHost);
 }
 
@@ -142,7 +145,7 @@ void run_interactive() {
 
     // Transfer and render.
     transfer_data();
-    draw(host_Body_pos_x, host_Body_pos_y, host_Body_mass);
+    draw(host_Body_pos_x, host_Body_pos_y, host_Body_mass, host_draw_counter);
   }
 
   close_renderer();
