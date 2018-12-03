@@ -5,7 +5,7 @@ In this problem, you will extend the n-body simulation (SoaAlloc version) from p
 1. Implement the collision behavior for the interactive mode. We do not care about the checksum/benchmark mode this time. You are done if the simulation rendering looks realistic.
 
 ## Hints
-This assignment is more tricky than the previous ones with respect to concurrency and data race issues. For simplicity, consider only the case where no more than two bodies are merged at the time. How do we determine which bodies should be merged?
+This assignment is more tricky than the previous ones with respect to concurrency and data race issues. For simplicity, consider only the case where no more than two bodies are merged at a time. How do we determine which bodies should be merged?
 
 * Two bodies collide if their distance is less than `0.01`.
 * Merging can be implemented as follows: Merge the smaller body into the bigger one. Update mass, position, velocity of the heavier body. Then, delete the lighter body from the simulation with `device_allocator->free<Body>(obj)`.
