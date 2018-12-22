@@ -1,4 +1,4 @@
-#nbody Simulation Problems
+# nbody Simulation Problems
 
 This repository contains five implementation tasks of an nbody simulation. Every task will build upon the previous one and is located on the corresponding git branch.
 
