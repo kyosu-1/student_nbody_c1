@@ -38,3 +38,4 @@ If you use Linux, this should just work out of the box. If you use Mac, you have
 
 * The rendering frame rate with X window forwarding can be very slow. You can increase `kTimeInterval` to simulate a longer period of time with every step.
 * Run the program in interactive mode during debugging. You will see a graphical rendering of the simulation. You are done with this task when the rendering "looks good".
+* If you use Ubuntu, you can install libsdl2 as `libsdl2-dev` and `libsdl2-2.0-0`.
