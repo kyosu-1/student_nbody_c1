@@ -1,4 +1,4 @@
-# Problem 1: Implement n-body Simulation
+# Problem 1: Implement GPU n-body Simulation
 This repository contains a skeleton of an n-body simulation written in CUDA. An n-body simulation simulates the movement of asteroids or planets (bodies) by calculating the [gravitational force](https://en.wikipedia.org/wiki/Gravity#Newton's_theory_of_gravitation) between every pair of bodies.
 
 ```math
