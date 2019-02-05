@@ -17,9 +17,16 @@ using AllocatorT = SoaAllocator<64*64*64*64, Body>;
 
 class Body : public SoaBase<AllocatorT> {
  public:
-  using FieldTypes = std::tuple</* TODO */>;
+  using FieldTypes = std::tuple<float, float, float, float, float, float, float>;
 
-  /* TODO */
+  SoaField<Body, 0> pos_x_;
+  SoaField<Body, 1> pos_y_;
+  SoaField<Body, 2> vel_x_;
+  SoaField<Body, 3> vel_y_;
+  SoaField<Body, 4> mass_;
+  SoaField<Body, 5> force_x_;
+  SoaField<Body, 6> force_y_;
+
 
   __device__ Body(float pos_x, float pos_y, float vel_x, float vel_y, float mass);
 
@@ -58,18 +65,39 @@ __device__ Body::Body(float pos_x, float pos_y,
 
 
 __device__ void Body::compute_force() {
-  /* TODO */
+  force_x_ = 0;
+  force_y_ = 0;
+  device_allocator->template device_do<Body>(&Body::apply_force, this);
+  /*for (int i = 0; i < kNumBodies; ++i){
+    this.apply_force(dev_bodies + i)*/
+  }
 }
 
 
 __device__ void Body::apply_force(Body* other) {
   // Update `other`.
-  /* TODO */
+  if(this != other){
+    float m1 = this->mass_;
+    float dx = this->pos_x_ - other->pos_x_;
+    float dy = this->pos_y_ - other->pos_y_;
+    float r = sqrt(dx * dx + dy * dy);
+    other.force_x_ += kGravityConstant * m1 * other.mass_ / (r * r * r) * dx;
+    other.force_y_ += kGravityConstant * m1 * other.mass_ / (r * r * r) * dy;
+  }
 }
 
 
 __device__ void Body::update() {
-  /* TODO */
+  vel_x_ += force_x_ / mass_ * dt;
+  vel_y_ += force_y_ / mass_ * dt;
+  pos_x_ += vel_x_ * dt;
+  pos_y_ += vel_y_ * dt;
+  if (abs(pos_x_) > 1) {
+    vel_x_ = - vel_x_;
+  }
+  if (abs(pos_y_) > 1) {
+    vel_y_ = - vel_y_;
+  }
 }
 
 
@@ -89,7 +117,20 @@ __global__ void kernel_initialize_bodies() {
   curand_init(kSeed, tid, 0, &rand_state);
 
   for (int i = tid; i < kNumBodies; i += blockDim.x * gridDim.x) {
-    /* TODO */
+    dev_bodies = bodies;
+
+    // Initialize random state.
+    curandState rand_state;
+    curand_init(kSeed, i, 0, &rand_state);
+
+    // Create new Body object with placement-new.
+
+    device_allocator->make_new<Body>(/*pos_x=*/ 2 * curand_uniform(&rand_state) - 1,
+                             /*pos_y=*/ 2 * curand_uniform(&rand_state) - 1,
+                             /*vel_x=*/ (curand_uniform(&rand_state) - 0.5) / 1000,
+                             /*vel_y=*/ (curand_uniform(&rand_state) - 0.5) / 1000,
+                             /*mass=*/ (curand_uniform(&rand_state)/2 + 0.5)
+                                           * kMaxMass);
   }
 }
 
@@ -198,4 +239,3 @@ int main(int argc, char** argv) {
 
   return 0;
 }
-
