@@ -34,7 +34,7 @@ class Body : public SoaBase<AllocatorT> {
 
   __device__ void apply_force(Body* other);
 
-  __device__ void update();
+  __device__ void update(float dt);
 
   // Only for rendering purposes.
   __device__ void add_to_draw_array();
@@ -70,8 +70,8 @@ __device__ void Body::compute_force() {
   device_allocator->template device_do<Body>(&Body::apply_force, this);
   /*for (int i = 0; i < kNumBodies; ++i){
     this.apply_force(dev_bodies + i)*/
-  }
 }
+
 
 
 __device__ void Body::apply_force(Body* other) {
@@ -81,13 +81,13 @@ __device__ void Body::apply_force(Body* other) {
     float dx = this->pos_x_ - other->pos_x_;
     float dy = this->pos_y_ - other->pos_y_;
     float r = sqrt(dx * dx + dy * dy);
-    other.force_x_ += kGravityConstant * m1 * other.mass_ / (r * r * r) * dx;
-    other.force_y_ += kGravityConstant * m1 * other.mass_ / (r * r * r) * dy;
+    other->force_x_ += kGravityConstant * m1 * other->mass_ / (r * r * r) * dx;
+    other->force_y_ += kGravityConstant * m1 * other->mass_ / (r * r * r) * dy;
   }
 }
 
 
-__device__ void Body::update() {
+__device__ void Body::update(float dt) {
   vel_x_ += force_x_ / mass_ * dt;
   vel_y_ += force_y_ / mass_ * dt;
   pos_x_ += vel_x_ * dt;
@@ -117,7 +117,7 @@ __global__ void kernel_initialize_bodies() {
   curand_init(kSeed, tid, 0, &rand_state);
 
   for (int i = tid; i < kNumBodies; i += blockDim.x * gridDim.x) {
-    dev_bodies = bodies;
+
 
     // Initialize random state.
     curandState rand_state;
@@ -179,7 +179,8 @@ void run_interactive() {
   init_renderer();
 
   while (true) {
-    /* TODO */
+    device_allocator->template device_do<Body>(&Body::compute_force);
+    device_allocator->template device_do<Body>(&Body::update, kTimeInterval);
 
     // Transfer and render.
     transfer_data();
@@ -194,7 +195,8 @@ void run_benchmark() {
   auto time_start = std::chrono::system_clock::now();
 
   for (int i = 0; i < kBenchmarkIterations; ++i) {
-    /* TODO */
+    device_allocator->template device_do<Body>(&Body::compute_force);
+    device_allocator->template device_do<Body>(&Body::update, kTimeInterval);
   }
 
   auto time_end = std::chrono::system_clock::now();
