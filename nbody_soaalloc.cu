@@ -179,8 +179,8 @@ void run_interactive() {
   init_renderer();
 
   while (true) {
-    allocator_handle->template parallel_do<Body, &Body::compute_force>();
-    allocator_handle->template parallel_do<Body, &Body::Update>();
+    allocator_handle->parallel_do<Body, &Body::compute_force>();
+    allocator_handle->parallel_do<Body, &Body::update>();
 
     // Transfer and render.
     transfer_data();
@@ -195,8 +195,8 @@ void run_benchmark() {
   auto time_start = std::chrono::system_clock::now();
 
   for (int i = 0; i < kBenchmarkIterations; ++i) {
-    allocator_handle->template parallel_do<Body, &Body::compute_force>();
-    allocator_handle->template parallel_do<Body, &Body::Update>();
+    allocator_handle->parallel_do<Body, &Body::compute_force>();
+    allocator_handle->parallel_do<Body, &Body::update>();
   }
 
   auto time_end = std::chrono::system_clock::now();
