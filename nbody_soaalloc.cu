@@ -34,7 +34,7 @@ class Body : public SoaBase<AllocatorT> {
 
   __device__ void apply_force(Body* other);
 
-  __device__ void update(float dt);
+  __device__ void update();
 
   // Only for rendering purposes.
   __device__ void add_to_draw_array();
@@ -87,11 +87,11 @@ __device__ void Body::apply_force(Body* other) {
 }
 
 
-__device__ void Body::update(float dt) {
-  vel_x_ += force_x_ / mass_ * dt;
-  vel_y_ += force_y_ / mass_ * dt;
-  pos_x_ += vel_x_ * dt;
-  pos_y_ += vel_y_ * dt;
+__device__ void Body::update() {
+  vel_x_ += force_x_ / mass_ * kTimeInterval;
+  vel_y_ += force_y_ / mass_ * kTimeInterval;
+  pos_x_ += vel_x_ * kTimeInterval;
+  pos_y_ += vel_y_ * kTimeInterval;
   if (abs(pos_x_) > 1) {
     vel_x_ = - vel_x_;
   }
@@ -179,8 +179,8 @@ void run_interactive() {
   init_renderer();
 
   while (true) {
-    device_allocator->template device_do<Body>(&Body::compute_force);
-    device_allocator->template device_do<Body>(&Body::update, kTimeInterval);
+    allocator_handle->template parallel_do<Body, &Body::compute_force>();
+    allocator_handle->template parallel_do<Body, &Body::Update>();
 
     // Transfer and render.
     transfer_data();
@@ -195,8 +195,8 @@ void run_benchmark() {
   auto time_start = std::chrono::system_clock::now();
 
   for (int i = 0; i < kBenchmarkIterations; ++i) {
-    device_allocator->template device_do<Body>(&Body::compute_force);
-    device_allocator->template device_do<Body>(&Body::update, kTimeInterval);
+    allocator_handle->template parallel_do<Body, &Body::compute_force>();
+    allocator_handle->template parallel_do<Body, &Body::Update>();
   }
 
   auto time_end = std::chrono::system_clock::now();
