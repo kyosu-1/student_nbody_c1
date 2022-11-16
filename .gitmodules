@@ -1,3 +1,6 @@
 [submodule "lib/soa-alloc"]
 	path = lib/soa-alloc
 	url = https://github.com/prg-titech/soa-alloc.git
+[submodule "lib/dynasoar"]
+	path = lib/dynasoar
+	url = https://github.com/prg-titech/dynasoar.git
