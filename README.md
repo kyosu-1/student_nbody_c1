@@ -1,36 +1,9 @@
-# Problem 1: Implement n-body Simulation
-This repository contains a skeleton of an n-body simulation written in CUDA. An n-body simulation simulates the movement of asteroids or planets (bodies) by calculating the [gravitational force](https://en.wikipedia.org/wiki/Gravity#Newton's_theory_of_gravitation) between every pair of bodies.
+# Problem 2: Convert n-body Simulation to SOA Data Layout
+In this problem, you will implement the same n-body simulation as in Problem 1, but in [SOA data layout](https://en.wikipedia.org/wiki/AOS_and_SOA). In the Problem 1, we defined an array `dev_bodies` of type `Body[]`. In SOA data layout, we define a separate array for every field of `Body`. E.g., there will arrays `Body_pos_x` and `Body_pos_y` of size `float[]`.
 
-```math
-F = G * m1 * m2 / (r * r)
-```
+The SOA data layout usually achieves better performance on GPUs. The reason for that is that the GPU can access global memory more efficiently ([vector](https://en.wikipedia.org/wiki/Vector_processor) loads).
 
-```math
-F = m * a
-```
-
-![nbody animation](https://github.com/prg-titech/student_nbody_c1/raw/master/nbody.gif "nbody animation")
-
-In CUDA, an n-body simulation consists of 2 kernels. The first kernel accumulates the total force that is exerted on bodies. The second kernel computes the change in velocity and position of bodies based on the force. We divide the program into two kernels to make sure that always the "old" position is used for calculating forces, such that the result is deterministic and always the same.
-
-0. Set up your Linux programming environment. Ensure that CUDA and libsdl2 are installed. If both are installed correctly, you should be able to build and run the code in this repository. If you do not have access to a Linux machine, you can log into our lab machine.
-1. Get familiar with CUDA. We suggest the Nvidia's [CUDA tutorial](https://devblogs.nvidia.com/even-easier-introduction-cuda/).
-2. Fill in the `TODO` parts in `nbody.h` and `nbody.cu`.
-
-
-## Login to Lab Machine
-You need 2 terminal windows. In the first window, tunnel our lab machine's SSH port through the lab gateway, which is accessible from anywhere on the internet.
-
-```
-ssh -L 3000:192.168.62.78:22 user_name@f9.is.titech.ac.jp -p 1104
-```
-
-Then you can connect to the server through your local machine.
-
-```
-ssh user_name@127.0.0.1 -p 3000 -Y
-```
-
-We will post the login credentials in the Slack. I suggest that you set up public key authentication to make the login more convenient.
-
-If you use Linux, this should just work out of the box. If you use Mac, you have to install [XQuartz](https://www.xquartz.org/) first and run both commands through an XQuartz terminal. If you use Windows, you have to install an X server through [Cygwin/X](http://x.cygwin.com/) and use the Cygwin terminal.
+0. Copy your solution from Problem 1 to `nbody.cu`. Note that this file has changed slightly. E.g., there is now a function for computing a checksum in benchmark mode.
+1. Ensure that you can build the project. There should be two executables `nbody` and `nbody_soa`.
+2. Fill in thr `TODO` parts in `nbody_soa.cu`.
+3. Run both `nbody` and `nbody_soa` in benchmark mode. They should produce the same checksum. Which version is faster?

@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 
+#include "configuration.h"
 #include "nbody.h"
 
 // Constants for rendering.
