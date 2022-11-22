@@ -5,7 +5,7 @@
 #include <new>
 
 #include "nbody.h"
-#include "rendering.h"
+// #include "rendering.h"
 
 // Simulation parameters.
 static const int kSeed = 42;
@@ -28,21 +28,54 @@ float random_float(float a, float b) {
 Body::Body(float pos_x, float pos_y,
            float vel_x, float vel_y, float mass) {
   /* TODO */
+  pos_x_ = pos_x;
+  pos_y_ = pos_y;
+  vel_x_ = vel_x;
+  vel_y_ = vel_y;
+  mass_ = mass;
 }
 
+// 二点間の距離を求める
+float distance(float x1, float y1, float x2, float y2) {
+  return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
 
 void Body::compute_force() {
   /* TODO */
 
   // Bodies should bounce off the wall when they go out of range.
   // Range: [-1, -1] to [1, 1]
+  force_x_ = 0;
+  force_y_ = 0;
+  for (int i = 0; i < kNumBodies; i++) {
+    if (this == &host_bodies[i]) {
+      continue;
+    }
+    float r = distance(pos_x_, pos_y_, host_bodies[i].pos_x_, host_bodies[i].pos_y_);
+    float force = kGravityConstant * mass_ * host_bodies[i].mass_ / (r * r);
+    float diff_x = pos_x_ - host_bodies[i].pos_x_;
+    float diff_y = pos_y_ - host_bodies[i].pos_y_;
+    force_x_ += force * diff_x / r;
+    force_y_ += force * diff_y / r;
+  }
 }
 
 
 void Body::update(float dt) {
   /* TODO */
+  float a_x = force_x_ / mass_;
+  float a_y = force_y_ / mass_;
+  vel_x_ += a_x * dt;
+  vel_y_ += a_y * dt;
+  pos_x_ += vel_x_ * dt;
+  if (pos_x_ < -1 || pos_x_ > 1) {
+    vel_x_ *= -1;
+  } 
+  pos_y_ += vel_y_ * dt;
+  if (pos_y_ < -1 || pos_y_ > 1) {
+    vel_y_ *= -1;
+  }
 }
-
 
 void kernel_initialize_bodies() {
   srand(kSeed);
@@ -79,17 +112,17 @@ void step_simulation() {
 }
 
 
-void run_interactive() {
-  init_renderer();
-
-  // Run simulation until user closes the window.
-  do {
-    // Compute one step.
-    step_simulation();
-  } while (draw(host_bodies));
-
-  close_renderer();  
-}
+// void run_interactive() {
+//   init_renderer();
+// 
+//   // Run simulation until user closes the window.
+//   do {
+//     // Compute one step.
+//     step_simulation();
+//   } while (draw(host_bodies));
+// 
+//   close_renderer();  
+// }
 
 void run_benchmark() {
   auto time_start = std::chrono::system_clock::now();
@@ -120,7 +153,7 @@ int main(int argc, char** argv) {
   kernel_initialize_bodies();
 
   if (mode == 0) {
-    run_interactive();
+  //  run_interactive();
   } else if (mode == 1) {
     run_benchmark();
   } else {
