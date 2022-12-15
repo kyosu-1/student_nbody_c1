@@ -26,16 +26,45 @@ __device__ Body* dev_bodies;
 __device__ Body::Body(float pos_x, float pos_y,
                       float vel_x, float vel_y, float mass) {
   /* TODO */
+  pos_x_ = pos_x;
+  pos_y_ = pos_y;
+  vel_x_ = vel_x;
+  vel_y_ = vel_y;
+  mass_ = mass;
+  force_x_ = 0;
+  force_y_ = 0;
 }
 
 
 __device__ void Body::compute_force() {
-  /* TODO */
+  force_x_ = 0;
+  force_y_ = 0;
+  for (int i = 0; i < kNumBodies; i++) {
+    if (this != (dev_bodies + i)) {
+      float dx = dev_bodies[i].pos_x_ - pos_x_;
+      float dy = dev_bodies[i].pos_y_ - pos_y_;
+      float r = sqrt(dx * dx + dy * dy);
+      float force = kGravityConstant * mass_ * dev_bodies[i].mass_ / (r * r);
+      force_x_ += force * dx / r;
+      force_y_ += force * dy / r;
+    }
+  }
 }
 
 
 __device__ void Body::update(float dt) {
-  /* TODO */
+  valx_ += force_x_ * dt / mass_;
+  valy_ += force_y_ * dt / mass_;
+  pox_x_ += vel_x_ * dt;
+  pox_y_ += vel_y_ * dt;
+
+  if (abs(pos_x) > 1) {
+    val_x_ *= -1;
+  }
+
+  if (abs(pos_y) > 1) {
+    val_y_ *= -1;
+  }
 
   // Bodies should bounce off the wall when they go out of range.
   // Range: [-1, -1] to [1, 1]
@@ -71,7 +100,10 @@ __global__ void kernel_compute_force() {
 
 
 __global__ void kernel_update() {
-  /* TODO */
+  for (int i = threadIdx.x + blockDim.x * blockIdx.x;
+       i < kNumBodies; i += blockDim.x * gridDim.x) {
+    dev_bodies[i].update(kTimeInterval);
+  }
 }
 
 
