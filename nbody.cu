@@ -53,17 +53,17 @@ __device__ void Body::compute_force() {
 
 
 __device__ void Body::update(float dt) {
-  valx_ += force_x_ * dt / mass_;
-  valy_ += force_y_ * dt / mass_;
-  pox_x_ += vel_x_ * dt;
-  pox_y_ += vel_y_ * dt;
+  vel_x_ += force_x_ * dt / mass_;
+  vel_y_ += force_y_ * dt / mass_;
+  pos_x_ += vel_x_ * dt;
+  pos_y_ += vel_y_ * dt;
 
-  if (abs(pos_x) > 1) {
-    val_x_ *= -1;
+  if (abs(pos_x_) > 1) {
+    vel_x_ *= -1;
   }
 
-  if (abs(pos_y) > 1) {
-    val_y_ *= -1;
+  if (abs(pos_y_) > 1) {
+    vel_y_ *= -1;
   }
 
   // Bodies should bounce off the wall when they go out of range.
