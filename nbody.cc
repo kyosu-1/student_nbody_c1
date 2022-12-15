@@ -5,7 +5,7 @@
 #include <new>
 
 #include "nbody.h"
-// #include "rendering.h"
+#include "rendering.h"
 
 // Simulation parameters.
 static const int kSeed = 42;
@@ -112,17 +112,17 @@ void step_simulation() {
 }
 
 
-// void run_interactive() {
-//   init_renderer();
-// 
-//   // Run simulation until user closes the window.
-//   do {
-//     // Compute one step.
-//     step_simulation();
-//   } while (draw(host_bodies));
-// 
-//   close_renderer();  
-// }
+void run_interactive() {
+  init_renderer();
+
+  // Run simulation until user closes the window.
+  do {
+    // Compute one step.
+    step_simulation();
+  } while (draw(host_bodies));
+
+  close_renderer();  
+}
 
 void run_benchmark() {
   auto time_start = std::chrono::system_clock::now();
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
   kernel_initialize_bodies();
 
   if (mode == 0) {
-  //  run_interactive();
+  run_interactive();
   } else if (mode == 1) {
     run_benchmark();
   } else {
