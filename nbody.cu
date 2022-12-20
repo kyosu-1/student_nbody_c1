@@ -135,6 +135,21 @@ void run_interactive() {
   close_renderer();  
 }
 
+int Body::checksum() {
+  return pos_x_ * 1000 + pos_y_ * 2000 + vel_x_ * 3000 + vel_y_ * 4000;
+}
+
+int checksum() {
+  int result = 0;
+
+  for (int i = 0; i < kNumBodies; ++i) {
+    result += i * host_bodies[i].checksum();
+    result %= 16785407;
+  }
+
+  return result;
+}
+
 void run_benchmark() {
   auto time_start = std::chrono::system_clock::now();
 
@@ -168,6 +183,7 @@ int main(int argc, char** argv) {
     run_interactive();
   } else if (mode == 1) {
     run_benchmark();
+    printf("Checksum: %i\n", checksum());
   } else {
     printf("Invalid mode.\n");
     return 1;
