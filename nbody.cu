@@ -5,10 +5,10 @@
 #include <new>
 
 #include <curand_kernel.h>
-#include <configuration.h>
 
 #include "cuda_helper.h"
 #include "nbody.h"
+#include "configuration.h"
 #include "rendering.h"
 
 // Simulation parameters.
