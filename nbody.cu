@@ -5,18 +5,19 @@
 #include <new>
 
 #include <curand_kernel.h>
+#include <configuration.h>
 
 #include "cuda_helper.h"
 #include "nbody.h"
 #include "rendering.h"
 
 // Simulation parameters.
-static const int kSeed = 42;
-static const float kTimeInterval = 0.5;
-static const int kBenchmarkIterations = 10000;
+// static const int kSeed = 42;
+// static const float kTimeInterval = 0.5;
+// static const int kBenchmarkIterations = 10000;
 
 // Physical constants.
-static const float kGravityConstant = 6.673e-11;   // gravitational constant
+// static const float kGravityConstant = 6.673e-11;   // gravitational constant
 
 // Array containing all Body objects on device.
 Body* host_bodies;
