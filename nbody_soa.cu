@@ -56,15 +56,15 @@ __device__ void compute_force(int id) {
 }
 
 __device__ void update(float dt, int id) {
-  dev_Body_vel_x[id] += dev_Body_force_x[id] / dev_Body_mass[id] * dt;
-  dev_Body_vel_y[id] += dev_Body_force_y[id] / dev_Body_mass[id] * dt;
+  dev_Body_vel_x[id] += dev_Body_force_x[id] * dt / dev_Body_mass[id];
+  dev_Body_vel_y[id] += dev_Body_force_y[id] * dt / dev_Body_mass[id]t;
   dev_Body_pos_x[id] += dev_Body_vel_x[id] * dt;
   dev_Body_pos_y[id] += dev_Body_vel_y[id] * dt;
   if (abs(dev_Body_pos_x[id]) > 1) {
-    dev_Body_vel_x[id] = - dev_Body_vel_x[id];
+    dev_Body_vel_x[id] *= -1;
   }
   if (abs(dev_Body_pos_y[id]) > 1) {
-    dev_Body_vel_y[id] = - dev_Body_vel_y[id];
+    dev_Body_vel_y[i] *= -1;
   }
 }
 
