@@ -18,6 +18,8 @@ class Body {
 
   __device__ void update(float dt);
 
+  int checksum();
+
   void draw();
 
  private:
