@@ -2,8 +2,8 @@
 #define NBODY_H
 
 // Simulation parameters.
-static const int kNumBodies = 25;
-static const float kMaxMass = 1000;
+// static const int kNumBodies = 25;
+// static const float kMaxMass = 1000;
 
 class Body {
  public:
