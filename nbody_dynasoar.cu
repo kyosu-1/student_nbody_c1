@@ -23,6 +23,9 @@ __device__ void Body::compute_force() {
 }
 
 __device__ void Body::apply_force(Body* other) {
+  if (this == other) {
+    return;
+  }
   float dx = other->pos_x_ - pos_x_;
   float dy = other->pos_y_ - pos_y_;
   float r = sqrt(dx * dx + dy * dy);
@@ -128,7 +131,7 @@ int main(int argc, char** argv) {
                      cudaMemcpyHostToDevice);
   
   // TODO: Initialize bodies
-  kernel_initialize_bodies<<<128, 128>>>();
+  allocator_handle -> parallel_new<Body>(kNumBodies);
 
   if (mode == 0) {
     run_interactive();
