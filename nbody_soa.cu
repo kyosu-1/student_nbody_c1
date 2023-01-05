@@ -48,7 +48,7 @@ __device__ void compute_force(int id) {
       float dx = dev_Body_pos_x[i] - dev_Body_pos_x[id];
       float dy = dev_Body_pos_y[i] - dev_Body_pos_y[id];
       float r = sqrt(dx * dx + dy * dy);
-      float force = kGravityConstant * m1 * m2 / (r * r);
+      float force = kGravityConstant * m1 * m2 / (r * r + kDampeningFactor);
       dev_Body_force_x[id] += force * dx / r;
       dev_Body_force_y[id] += force * dy / r;
     }

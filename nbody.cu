@@ -45,7 +45,7 @@ __device__ void Body::compute_force() {
       float dx = dev_bodies[i].pos_x_ - pos_x_;
       float dy = dev_bodies[i].pos_y_ - pos_y_;
       float r = sqrt(dx * dx + dy * dy);
-      float force = kGravityConstant * mass_ * dev_bodies[i].mass_ / (r * r);
+      float force = kGravityConstant * mass_ * dev_bodies[i].mass_ / (r * r + kDampeningFactor);
       force_x_ += force * dx / r;
       force_y_ += force * dy / r;
     }
