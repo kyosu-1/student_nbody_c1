@@ -8,7 +8,7 @@
 AllocatorHandle<AllocatorT>* allocator_handle;
 __device__ AllocatorT* device_allocator;
 
-static const float kMergeThreshold = 0.5f;
+static const float kMergeThreshold = 0.05f;
 
 float host_checksum;
 
