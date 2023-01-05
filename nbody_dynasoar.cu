@@ -60,7 +60,9 @@ __device__ void Body::update_merge() {
 
 __device__ void Body::delete_merged() {
   if (merge_into_ != nullptr) {
-    destroy(device_allocator, this);
+    if (merge_into_->merge_into_ != nullptr) {
+      destroy(device_allocator, this);
+    }
   }
 }
 
