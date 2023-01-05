@@ -16,11 +16,10 @@ __device__ Body::Body(float pos_x, float pos_y,
       vel_x_(vel_x), vel_y_(vel_y), mass_(mass) {}
 
 __device__ void Body::compute_force() {
-  device_allocator->device_do<Body>([&](Body* other) {
-    if (other != this) {
-      apply_force(other);
-    }
-  });
+  force_x_ = 0.0f;
+  force_y_ = 0.0f;
+  // Body型のすべてのオブジェクトに対してapply_forceを実行する
+  device_allocator->template device_do<Body>(&Body::apply_force, this);
 }
 
 __device__ void Body::apply_force(Body* other) {
@@ -28,8 +27,8 @@ __device__ void Body::apply_force(Body* other) {
   float dy = other->pos_y_ - pos_y_;
   float r = sqrt(dx * dx + dy * dy);
   float force = kGravityConstant * mass_ * other->mass_ / (r * r);
-  force_x_ += force * dx / r;
-  force_y_ += force * dy / r;
+  ohter -> force_x_ += force * dx / r;
+  ohter -> force_y_ += force * dy / r;
 }
 
 __device__ void Body::update() {
@@ -39,9 +38,6 @@ __device__ void Body::update() {
   // update position
   pos_x_ += vel_x_ * kTimeInterval;
   pos_y_ += vel_y_ * kTimeInterval;
-  // reset force
-  force_x_ = 0.0f;
-  force_y_ = 0.0f;
 
   if (abs(pos_x_) > 1) {
     vel_x_ *= -1;
@@ -70,12 +66,8 @@ __device__ Body::Body(int idx) {
 }
 
 void step_simulation() {
-  allocator_handle->parallel_do<Body>([&](Body* body){
-    body->compute_force();
-  });
-  allocator_handle->parallel_do<Body>([&](Body* body){
-    body->update();
-  });
+  allocator_handle->parallel_do<Body, &Body::compute_force>();
+  allocator_handle->parallel_do<Body, &Body::update>();
 }
 
 void run_benchmark() {
@@ -128,9 +120,7 @@ int main(int argc, char** argv) {
                      cudaMemcpyHostToDevice);
   
   // Initialize bodies
-  allocator_handle->template device_do<Body>([&](Body* body){
-    new (body) Body(body->idx());
-  });
+  allocator_handle->paralell_new<Body>(kNumBodies);
 
   if (mode == 0) {
     run_interactive();
