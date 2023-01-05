@@ -16,16 +16,40 @@ __device__ Body::Body(float pos_x, float pos_y,
       vel_x_(vel_x), vel_y_(vel_y), mass_(mass) {}
 
 __device__ void Body::compute_force() {
-  /* TODO */
+  device_allocator->device_do<Body>([&](Body* other) {
+    if (other != this) {
+      apply_force(other);
+    }
+  });
 }
 
 __device__ void Body::apply_force(Body* other) {
-  // Update `other`.
-  /* TODO */
+  float dx = other->pos_x_ - pos_x_;
+  float dy = other->pos_y_ - pos_y_;
+  float r = sqrt(dx * dx + dy * dy);
+  float force = kGravityConstant * mass_ * other->mass_ / (r * r);
+  force_x_ += force * dx / r;
+  force_y_ += force * dy / r;
 }
 
 __device__ void Body::update() {
-  /* TODO */
+  // update velocity
+  vel_x_ += force_x_ * kTimeInterval / mass_;
+  vel_y_ += force_y_ * kTimeInterval / mass_;
+  // update position
+  pos_x_ += vel_x_ * kTimeInterval;
+  pos_y_ += vel_y_ * kTimeInterval;
+  // reset force
+  force_x_ = 0.0f;
+  force_y_ = 0.0f;
+
+  if (abs(pos_x_) > 1) {
+    vel_x_ *= -1;
+  }
+
+  if (abs(pos_y_) > 1) {
+    vel_y_ *= -1;
+  }
 }
 
 void Body::add_checksum() {
@@ -46,7 +70,12 @@ __device__ Body::Body(int idx) {
 }
 
 void step_simulation() {
-  /* TODO */
+  allocator_handle->parallel_do<Body>([&](Body* body){
+    body->compute_force();
+  });
+  allocator_handle->parallel_do<Body>([&](Body* body){
+    body->update();
+  });
 }
 
 void run_benchmark() {
@@ -78,7 +107,7 @@ void run_interactive() {
   init_renderer();
 
   do {
-    /* TODO */
+    step_simulation();
   } while (render_frame());
 
   close_renderer();
@@ -98,7 +127,10 @@ int main(int argc, char** argv) {
   cudaMemcpyToSymbol(device_allocator, &dev_ptr, sizeof(AllocatorT*), 0,
                      cudaMemcpyHostToDevice);
   
-  // TODO: Initialize the objects
+  // Initialize bodies
+  allocator_handle->template device_do<Body>([&](Body* body){
+    new (body) Body(body->idx());
+  });
 
   if (mode == 0) {
     run_interactive();

@@ -8,10 +8,16 @@ using AllocatorT = SoaAllocator<64*64*64*64, Body>;
 
 class Body : public AllocatorT::Base {
   public:
-    declare_field_types(/* TODO */)
+    declare_field_types(Body, float, float, float, float, float, float)
   
   private:
-    /* TODO */
+    Field<Body, 0> pos_x_;
+    Field<Body, 1> pos_y_;
+    Field<Body, 2> vel_x_;
+    Field<Body, 3> vel_y_;
+    Field<Body, 4> mass_;
+    Field<Body, 5> force_x_;
+    Field<Body, 6> force_y_;
 
   public:
     __device__ Body(float pos_x, float pos_y, float vel_x, float vel_y, float mass);
@@ -29,5 +35,4 @@ class Body : public AllocatorT::Base {
     __device__ __host__ float pos_x() const { return pos_x_; }
     __device__ __host__ float pos_y() const { return pos_y_; }
     __device__ __host__ float mass() const { return mass_; }
-
 };
