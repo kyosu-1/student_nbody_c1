@@ -44,7 +44,7 @@ __device__ void Body::check_merge_into_this(Body* other) {
 }
 
 __device__ void Body::prepare_merge() {
-  device_allocator->template device_do<Body>(&Body::check_merge_into_this(this));
+  device_allocator->template device_do<Body>(&Body::check_merge_into_this, this);
 }
 
 __device__ void Body::update_merge() {
