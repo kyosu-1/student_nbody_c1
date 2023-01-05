@@ -2,7 +2,7 @@
 #define CONFIGURATION_H
 
 // Simulation parameters.
-static const int kNumBodies = 160;
+static const int kNumBodies = 16000;
 static const float kMaxMass = 1000;
 static const int kSeed = 42;
 static const float kTimeInterval = 0.5;
