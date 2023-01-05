@@ -119,10 +119,7 @@ int main(int argc, char** argv) {
   cudaMemcpyToSymbol(device_allocator, &dev_ptr, sizeof(AllocatorT*), 0,
                      cudaMemcpyHostToDevice);
   
-  // Initialize bodies
-  for (int i = 0; i < kNumBodies; ++i) {
-    allocator_handle->template device_new<Body>(i);
-  }
+  // TODO: Initialize bodies
 
   if (mode == 0) {
     run_interactive();
