@@ -29,8 +29,7 @@ __device__ void Body::apply_force(Body* other) {
   float dx = -(other->pos_x_ - pos_x_);
   float dy = -(other->pos_y_ - pos_y_);
   float r = sqrt(dx * dx + dy * dy);
-  float force = kGravityConstant * mass_ * other->mass_ / (r * r);
-  force *= 0.1;
+  float force = kGravityConstant * mass_ * other->mass_ / (r * r + 0.05);
   other -> force_x_ += force * dx / r;
   other -> force_y_ += force * dy / r;
 }
