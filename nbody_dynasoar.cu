@@ -49,10 +49,12 @@ __device__ void Body::prepare_merge() {
 
 __device__ void Body::update_merge() {
   if (merge_into_ != nullptr) {
-    float mass = merge_into_->mass_ + mass_;
-    merge_into_->vel_x_ = (vel_x_ * mass_ + merge_into_->vel_x_ * merge_into_->mass_) / mass;
-    merge_into_->vel_y_ = (vel_y_ * mass_ + merge_into_->vel_y_ * merge_into_->mass_) / mass;
-    merge_into_->mass_ = mass;
+    if (merge_into_->merge_into_ != nullptr) {
+      float mass = merge_into_->mass_ + mass_;
+      merge_into_->vel_x_ = (vel_x_ * mass_ + merge_into_->vel_x_ * merge_into_->mass_) / mass;
+      merge_into_->vel_y_ = (vel_y_ * mass_ + merge_into_->vel_y_ * merge_into_->mass_) / mass;
+      merge_into_->mass_ = mass;
+    }
   }
 }
 
