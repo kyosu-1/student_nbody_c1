@@ -8,7 +8,7 @@ using AllocatorT = SoaAllocator<64*64*64*64, Body>;
 
 class Body : public AllocatorT::Base {
   public:
-    declare_field_types(Body, *Body, float, float, float, float, float, float)
+    declare_field_types(Body, Body*, float, float, float, float, float, float)
   
   private:
     Field<Body, 0> merge_into_;
