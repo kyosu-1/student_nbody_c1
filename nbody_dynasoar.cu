@@ -120,9 +120,9 @@ int main(int argc, char** argv) {
                      cudaMemcpyHostToDevice);
   
   // Initialize bodies
-  allocator_handle->template device_do<Body>([](Body* body){
-    new (body) Body(body->idx());
-  });
+  for (int i = 0; i < kNumBodies; ++i) {
+    allocator_handle->template device_new<Body>(i);
+  }
 
   if (mode == 0) {
     run_interactive();
