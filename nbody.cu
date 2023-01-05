@@ -6,10 +6,18 @@
 
 #include <curand_kernel.h>
 
-#include "configuration.h"
 #include "cuda_helper.h"
 #include "nbody.h"
+#include "configuration.h"
 #include "rendering.h"
+
+// Simulation parameters.
+// static const int kSeed = 42;
+// static const float kTimeInterval = 0.5;
+// static const int kBenchmarkIterations = 10000;
+
+// Physical constants.
+// static const float kGravityConstant = 6.673e-11;   // gravitational constant
 
 // Array containing all Body objects on device.
 Body* host_bodies;
@@ -19,24 +27,48 @@ __device__ Body* dev_bodies;
 __device__ Body::Body(float pos_x, float pos_y,
                       float vel_x, float vel_y, float mass) {
   /* TODO */
+  pos_x_ = pos_x;
+  pos_y_ = pos_y;
+  vel_x_ = vel_x;
+  vel_y_ = vel_y;
+  mass_ = mass;
+  force_x_ = 0;
+  force_y_ = 0;
 }
 
 
 __device__ void Body::compute_force() {
-  /* TODO */
+  force_x_ = 0;
+  force_y_ = 0;
+  for (int i = 0; i < kNumBodies; i++) {
+    if (this != (dev_bodies + i)) {
+      float dx = dev_bodies[i].pos_x_ - pos_x_;
+      float dy = dev_bodies[i].pos_y_ - pos_y_;
+      float r = sqrt(dx * dx + dy * dy);
+      float force = kGravityConstant * mass_ * dev_bodies[i].mass_ / (r * r);
+      force_x_ += force * dx / r;
+      force_y_ += force * dy / r;
+    }
+  }
 }
 
 
 __device__ void Body::update(float dt) {
-  /* TODO */
+  vel_x_ += force_x_ * dt / mass_;
+  vel_y_ += force_y_ * dt / mass_;
+  pos_x_ += vel_x_ * dt;
+  pos_y_ += vel_y_ * dt;
+
+  if (abs(pos_x_) > 1) {
+    vel_x_ *= -1;
+  }
+
+  if (abs(pos_y_) > 1) {
+    vel_y_ *= -1;
+  }
 
   // Bodies should bounce off the wall when they go out of range.
   // Range: [-1, -1] to [1, 1]
-}
-
-
-int Body::checksum() {
-  return static_cast<int>(pos_x_*1000 + pos_y_*2000 + vel_x_*3000 + vel_y_*4000) % 123456;
 }
 
 
@@ -69,7 +101,10 @@ __global__ void kernel_compute_force() {
 
 
 __global__ void kernel_update() {
-  /* TODO */
+  for (int i = threadIdx.x + blockDim.x * blockIdx.x;
+       i < kNumBodies; i += blockDim.x * gridDim.x) {
+    dev_bodies[i].update(kTimeInterval);
+  }
 }
 
 
@@ -100,6 +135,21 @@ void run_interactive() {
   close_renderer();  
 }
 
+int Body::checksum() {
+  return pos_x_ * 1000 + pos_y_ * 2000 + vel_x_ * 3000 + vel_y_ * 4000;
+}
+
+int checksum() {
+  int result = 0;
+
+  for (int i = 0; i < kNumBodies; ++i) {
+    result += i * host_bodies[i].checksum();
+    result %= 16785407;
+  }
+
+  return result;
+}
+
 void run_benchmark() {
   auto time_start = std::chrono::system_clock::now();
 
@@ -113,16 +163,6 @@ void run_benchmark() {
       .count();
 
   printf("Time: %lu ms\n", millis);
-}
-
-int checksum() {
-  int result = 0;
-
-  for (int i = 0; i < kNumBodies; ++i) {
-    result += host_bodies[i].checksum();
-  }
-
-  return result;
 }
 
 int main(int argc, char** argv) {
@@ -152,4 +192,3 @@ int main(int argc, char** argv) {
   cudaFree(host_bodies);
   return 0;
 }
-

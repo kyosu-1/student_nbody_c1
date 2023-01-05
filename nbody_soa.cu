@@ -29,16 +29,49 @@ float* host_Body_force_y;
 
 __device__ void new_Body(int id, float pos_x, float pos_y,
                          float vel_x, float vel_y, float mass) {
-  /* TODO */
+                           dev_Body_pos_x[id] = pos_x;
+                           dev_Body_pos_y[id] = pos_y;
+                           dev_Body_vel_x[id] = vel_x;
+                           dev_Body_vel_y[id] = vel_y;
+                           dev_Body_mass[id] = mass;
+                           dev_Body_force_x[id] = 0;
+                           dev_Body_force_y[id] = 0;
+}
+
+__device__ void compute_force(int id) {
+  dev_Body_force_x[id] = 0;
+  dev_Body_force_y[id] = 0;
+  for (int i = 0; i < kNumBodies; ++i){
+    if(id != i){
+      float m1 = dev_Body_mass[id];
+      float m2 = dev_Body_mass[i];
+      float dx = dev_Body_pos_x[i] - dev_Body_pos_x[id];
+      float dy = dev_Body_pos_y[i] - dev_Body_pos_y[id];
+      float r = sqrt(dx * dx + dy * dy);
+      float force = kGravityConstant * m1 * m2 / (r * r);
+      dev_Body_force_x[id] += force * dx / r;
+      dev_Body_force_y[id] += force * dy / r;
+    }
+  }
+}
+
+__device__ void update(float dt, int id) {
+  dev_Body_vel_x[id] += dev_Body_force_x[id] * dt / dev_Body_mass[id];
+  dev_Body_vel_y[id] += dev_Body_force_y[id] * dt / dev_Body_mass[id];
+  dev_Body_pos_x[id] += dev_Body_vel_x[id] * dt;
+  dev_Body_pos_y[id] += dev_Body_vel_y[id] * dt;
+  if (abs(dev_Body_pos_x[id]) > 1) {
+    dev_Body_vel_x[id] *= -1;
+  }
+  if (abs(dev_Body_pos_y[id]) > 1) {
+    dev_Body_vel_y[id] *= -1;
+  }
 }
 
 
-/* TODO */
-
-
 int Body_checksum(int id) {
-  return static_cast<int>(host_Body_pos_x[id]*1000 + host_Body_pos_y[id]*2000
-      + host_Body_vel_x[id]*3000 + host_Body_vel_y[id]*4000) % 123456;
+  return host_Body_pos_x[id]*1000 + host_Body_pos_y[id]*2000
+      + host_Body_vel_x[id]*3000 + host_Body_vel_y[id]*4000;
 }
 
 
@@ -72,12 +105,18 @@ __global__ void kernel_initialize_bodies(float* pos_x, float* pos_y,
 
 
 __global__ void kernel_compute_force() {
-  /* TODO */
+  for (int i = threadIdx.x + blockDim.x * blockIdx.x;
+       i < kNumBodies; i += blockDim.x * gridDim.x) {
+        compute_force(i);
+  }
 }
 
 
 __global__ void kernel_update() {
-  /* TODO */
+  for (int i = threadIdx.x + blockDim.x * blockIdx.x;
+       i < kNumBodies; i += blockDim.x * gridDim.x) {
+        update(kTimeInterval, i);
+  }
 }
 
 
@@ -111,6 +150,7 @@ int checksum() {
 
   for (int i = 0; i < kNumBodies; ++i) {
     result += Body_checksum(i);
+    result %= 16785407;
   }
 
   return result;
@@ -158,4 +198,3 @@ int main(int argc, char** argv) {
 
   return 0;
 }
-
