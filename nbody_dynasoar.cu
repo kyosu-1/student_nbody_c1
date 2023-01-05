@@ -18,38 +18,77 @@ __device__ Body::Body(float pos_x, float pos_y,
       vel_x_(vel_x), vel_y_(vel_y), mass_(mass) {}
 
 __device__ void Body::compute_force() {
-  /* TODO */
+  force_x_ = 0.0f;
+  force_y_ = 0.0f;
+  // Body型のすべてのオブジェクトに対してapply_forceを実行する
+  device_allocator->template device_do<Body>(&Body::apply_force, this);
 }
 
 // Functions for checking merge condition
 /* TODO */
 __device__ void Body::initialize_merge() {
-
+  this->merge_into_ = nullptr;
 }
 
 __device__ void Body::check_merge_into_this(Body* other) {
-
+  if (this == other) {
+    return;
+  }
+  float dx = -(other->pos_x_ - pos_x_);
+  float dy = -(other->pos_y_ - pos_y_);
+  float r = sqrt(dx * dx + dy * dy);
+  // 自身がohterよりも小さい場合、ohterの方にmergeする
+  if (r < kMergeThreshold && mass_ < other->mass_) {
+    other->merge_into_ = this;
+  }
 }
 
 __device__ void Body::prepare_merge() {
-
+  device_allocator->template device_do<Body>(&Body::check_merge_into_this(this));
 }
 
 __device__ void Body::update_merge() {
-
+  if (merge_into_ != nullptr) {
+    float mass = merge_into_->mass_ + mass_;
+    merge_into_->vel_x_ = (vel_x_ * mass_ + merge_into_->vel_x_ * merge_into_->mass_) / mass;
+    merge_into_->vel_y_ = (vel_y_ * mass_ + merge_into_->vel_y_ * merge_into_->mass_) / mass;
+    merge_into_->mass_ = mass;
+  }
 }
 
 __device__ void Body::delete_merged() {
-
+  if (merge_into_ != nullptr) {
+    destroy(device_allocator, this);
+  }
 }
 
 __device__ void Body::apply_force(Body* other) {
-  // Update `other`.
-  /* TODO */
+  if (this == other) {
+    return;
+  }
+  float dx = -(other->pos_x_ - pos_x_);
+  float dy = -(other->pos_y_ - pos_y_);
+  float r = sqrt(dx * dx + dy * dy);
+  float force = kGravityConstant * mass_ * other->mass_ / (r * r + kDampeningFactor);
+  other -> force_x_ += force * dx / r;
+  other -> force_y_ += force * dy / r;
 }
 
 __device__ void Body::update() {
-  /* TODO */
+  // update velocity
+  vel_x_ += force_x_ * kTimeInterval / mass_;
+  vel_y_ += force_y_ * kTimeInterval / mass_;
+  // update position
+  pos_x_ += vel_x_ * kTimeInterval;
+  pos_y_ += vel_y_ * kTimeInterval;
+
+  if (abs(pos_x_) > 1) {
+    vel_x_ *= -1;
+  }
+
+  if (abs(pos_y_) > 1) {
+    vel_y_ *= -1;
+  }
 }
 
 void Body::add_checksum() {
@@ -70,7 +109,12 @@ __device__ Body::Body(int idx) {
 }
 
 void step_simulation() {
-  /* TODO */
+  allocator_handle->parallel_do<Body, &Body::compute_force>();
+  allocator_handle->parallel_do<Body, &Body::update>();
+  allocator_handle->parallel_do<Body, &Body::initialize_merge>();
+  allocator_handle->parallel_do<Body, &Body::prepare_merge>();
+  allocator_handle->parallel_do<Body, &Body::update_merge>();
+  allocator_handle->parallel_do<Body, &Body::delete_merged>();
 }
 
 void run_benchmark() {

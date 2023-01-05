@@ -8,10 +8,17 @@ using AllocatorT = SoaAllocator<64*64*64*64, Body>;
 
 class Body : public AllocatorT::Base {
   public:
-    declare_field_types(/* TODO */)
+    declare_field_types(Body, *Body, float, float, float, float, float, float)
   
   private:
-    /* TODO */
+    Field<Body, 0> merge_into_;
+    Field<Body, 1> pos_x_;
+    Field<Body, 2> pos_y_;
+    Field<Body, 3> vel_x_;
+    Field<Body, 4> vel_y_;
+    Field<Body, 5> mass_;
+    Field<Body, 6> force_x_;
+    Field<Body, 7> force_y_;
 
 
   public:
