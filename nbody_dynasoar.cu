@@ -146,7 +146,7 @@ void run_interactive() {
   init_renderer();
 
   do {
-    /* TODO */
+    step_simulation();
   } while (render_frame());
 
   close_renderer();
