@@ -65,6 +65,14 @@ __device__ Body::Body(int idx) {
   force_y_ = 0.0f;
 }
 
+// 初期化用の関数を追加
+__global__ void kernel_initialize_bodies() {
+  int tid = threadIdx.x + blockDim.x * blockIdx.x;
+  for (int i = tid; i < kNumBodies; i += blockDim.x * gridDim.x) {
+    new(device_allocator) Body(i);
+  }
+}
+
 void step_simulation() {
   allocator_handle->parallel_do<Body, &Body::compute_force>();
   allocator_handle->parallel_do<Body, &Body::update>();
@@ -120,6 +128,7 @@ int main(int argc, char** argv) {
                      cudaMemcpyHostToDevice);
   
   // TODO: Initialize bodies
+  kernel_initialize_bodies<<<128, 128>>>();
 
   if (mode == 0) {
     run_interactive();
