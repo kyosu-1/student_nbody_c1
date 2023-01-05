@@ -27,8 +27,8 @@ __device__ void Body::apply_force(Body* other) {
   float dy = other->pos_y_ - pos_y_;
   float r = sqrt(dx * dx + dy * dy);
   float force = kGravityConstant * mass_ * other->mass_ / (r * r);
-  ohter -> force_x_ += force * dx / r;
-  ohter -> force_y_ += force * dy / r;
+  other -> force_x_ += force * dx / r;
+  other -> force_y_ += force * dy / r;
 }
 
 __device__ void Body::update() {
@@ -120,7 +120,9 @@ int main(int argc, char** argv) {
                      cudaMemcpyHostToDevice);
   
   // Initialize bodies
-  allocator_handle->paralell_new<Body>(kNumBodies);
+  allocator_handle->template device_do<Body>([](Body* body){
+    new (body) Body(body->idx());
+  });
 
   if (mode == 0) {
     run_interactive();
